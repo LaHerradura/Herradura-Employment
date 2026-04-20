@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LA HERRADURA - Employment Application</title>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -222,38 +221,6 @@
             border-top: 1px solid #ddd;
         }
 
-        .success-message {
-            display: none;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .success-message.show {
-            display: block;
-        }
-
-        .error-message {
-            display: none;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
         .required {
             color: var(--burgundy);
             font-weight: bold;
@@ -266,15 +233,102 @@
             font-style: italic;
         }
 
-        .loading {
+        .success-modal {
             display: none;
-            text-align: center;
-            color: var(--burgundy);
-            font-weight: bold;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
 
-        .loading.show {
+        .success-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: var(--burgundy);
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: var(--charcoal);
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .checkmark {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .modal-button {
+            background-color: var(--burgundy);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .modal-button:hover {
+            background-color: #6B2A2A;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner.show {
             display: block;
+        }
+
+        .spinner {
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--burgundy);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -287,11 +341,12 @@
         </div>
 
         <div class="content">
-            <div class="loading" id="loadingMessage">⏳ Sending your application...</div>
-            <div class="success-message" id="successMessage">✓ Application submitted successfully! We'll be in touch soon.</div>
-            <div class="error-message" id="errorMessage">✗ Error submitting. Please try again.</div>
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Sending your application...</p>
+            </div>
 
-            <form id="applicationForm">
+            <form id="applicationForm" style="display: block;">
                 <div class="section">
                     <div class="section-title">Personal Information</div>
                     <div class="form-group">
@@ -344,7 +399,7 @@
 
                 <div class="section">
                     <div class="section-title">Requirements</div>
-                    <p class="section-description">Please ensure you meet the following requirements:</p>
+                    <p class="section-description">Check the requirements you meet:</p>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
                             <input type="checkbox" id="bilingual" name="bilingual">
@@ -487,34 +542,90 @@
         </div>
     </div>
 
-    <script>
-        emailjs.init("DwBc1R-hn9G4vikya");
+    <div class="success-modal" id="successModal">
+        <div class="modal-content">
+            <div class="checkmark">✓</div>
+            <h2>Application Submitted!</h2>
+            <p>Thank you for applying to LA HERRADURA.</p>
+            <p>We have received your application and will review it shortly.</p>
+            <p style="margin-top: 15px; font-weight: bold; color: var(--burgundy);">We'll be in touch soon!</p>
+            <button class="modal-button" onclick="location.reload()">Close</button>
+        </div>
+    </div>
 
+    <script>
         const form = document.getElementById('applicationForm');
         const submitBtn = document.getElementById('submitBtn');
-        const successMsg = document.getElementById('successMessage');
-        const errorMsg = document.getElementById('errorMessage');
-        const loadingMsg = document.getElementById('loadingMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const successModal = document.getElementById('successModal');
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            if (!document.getElementById('declaration').checked) {
+                alert('Please agree to the declaration before submitting.');
+                return;
+            }
+
             submitBtn.disabled = true;
-            loadingMsg.classList.add('show');
-            successMsg.classList.remove('show');
-            errorMsg.classList.remove('show');
+            form.style.display = 'none';
+            loadingSpinner.classList.add('show');
 
-            const formData = new FormData(form);
-            
-            let emailText = "NEW EMPLOYMENT APPLICATION - LA HERRADURA\n\n";
-            emailText += "====== PERSONAL INFORMATION ======\n";
-            emailText += "Full Name: " + (formData.get('fullName') || 'N/A') + "\n";
-            emailText += "Email: " + (formData.get('email') || 'N/A') + "\n";
-            emailText += "Phone: " + (formData.get('phone') || 'N/A') + "\n";
-            emailText += "City, State, Zip: " + (formData.get('city') || 'N/A') + "\n";
-            emailText += "Position: " + (formData.get('position') || 'N/A') + "\n";
-            emailText += "Start Date: " + (formData.get('startDate') || 'N/A') + "\n\n";
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                city: document.getElementById('city').value,
+                position: document.getElementById('position').value,
+                daysAvailable: document.getElementById('daysAvailable').value,
+                hoursAvailable: document.getElementById('hoursAvailable').value,
+                startDate: document.getElementById('startDate').value,
+                bilingual: document.getElementById('bilingual').checked ? 'Yes' : 'No',
+                experience: document.getElementById('experience').checked ? 'Yes' : 'No',
+                socialMedia: document.getElementById('socialMedia').checked ? 'Yes' : 'No',
+                foodHandler: document.getElementById('foodHandler').checked ? 'Yes' : 'No',
+                alcoholServer: document.getElementById('alcoholServer').checked ? 'Yes' : 'No',
+                employer: document.getElementById('employer').value,
+                previousPosition: document.getElementById('previousPosition').value,
+                startEmployment: document.getElementById('startEmployment').value,
+                endEmployment: document.getElementById('endEmployment').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                reasonLeaving: document.getElementById('reasonLeaving').value,
+                desiredPay: document.getElementById('desiredPay').value,
+                skills: document.getElementById('skills').value,
+                socialMedia1: document.getElementById('socialMedia1').value,
+                socialMedia2: document.getElementById('socialMedia2').value,
+                ref1Name: document.getElementById('ref1Name').value,
+                ref1Relationship: document.getElementById('ref1Relationship').value,
+                ref1Phone: document.getElementById('ref1Phone').value,
+                ref2Name: document.getElementById('ref2Name').value,
+                ref2Relationship: document.getElementById('ref2Relationship').value,
+                ref2Phone: document.getElementById('ref2Phone').value,
+                timestamp: new Date().toLocaleString()
+            };
 
-            emailText += "====== AVAILABILITY ======\n";
-            emailText += "Days: " + (formData.get('daysAvailable') || 'N/A') + "\n";
-            emailText += "Hours:​​​​​​​​​​​​​​​​
+            try {
+                const response = await fetch('https://webhook.site/72c09918-d06c-4fbd-a0f3-9c3b1f5e9a2c', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                setTimeout(() => {
+                    loadingSpinner.classList.remove('show');
+                    successModal.classList.add('show');
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingSpinner.classList.remove('show');
+                form.style.display = 'block';
+                submitBtn.disabled = false;
+                alert('There was an error submitting your application. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
