@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LA HERRADURA - Employment Application</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/index.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -213,6 +214,11 @@
             transform: scale(0.98);
         }
 
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
         .btn-clear {
             background-color: var(--light-gray);
             color: var(--charcoal);
@@ -247,6 +253,21 @@
             display: block;
         }
 
+        .error-message {
+            display: none;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .required {
             color: var(--burgundy);
             font-weight: bold;
@@ -257,6 +278,13 @@
             color: #666;
             margin-bottom: 12px;
             font-style: italic;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--burgundy);
+            font-weight: bold;
         }
 
         @media print {
@@ -275,21 +303,26 @@
 </head>
 <body>
     <div class="container">
-        <!-- HEADER -->
         <div class="header">
             <div class="logo">🤠</div>
             <h1>LA HERRADURA</h1>
             <p>Employment Application</p>
         </div>
 
-        <!-- FORM -->
         <div class="content">
             <div class="success-message" id="successMessage">
-                ✓ Application submitted successfully!
+                ✓ Application submitted successfully! We'll be in touch soon.
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                ✗ Error submitting application. Please try again.
+            </div>
+
+            <div class="loading" id="loadingMessage">
+                ⏳ Sending your application...
             </div>
 
             <form id="applicationForm">
-                <!-- PERSONAL INFORMATION -->
                 <div class="section">
                     <div class="section-title">Personal Information</div>
                     
@@ -329,7 +362,6 @@
                     </div>
                 </div>
 
-                <!-- AVAILABILITY -->
                 <div class="section">
                     <div class="section-title">Availability</div>
                     
@@ -349,7 +381,6 @@
                     </div>
                 </div>
 
-                <!-- REQUIREMENTS -->
                 <div class="section">
                     <div class="section-title">Requirements</div>
                     <p class="section-description">Please ensure you meet the following requirements:</p>
@@ -378,7 +409,6 @@
                     </div>
                 </div>
 
-                <!-- EMPLOYMENT HISTORY -->
                 <div class="section">
                     <div class="section-title">Employment History</div>
                     <p class="section-description">Most Recent Position:</p>
@@ -420,7 +450,6 @@
                     </div>
                 </div>
 
-                <!-- SKILLS -->
                 <div class="section">
                     <div class="section-title">Skills & Experience</div>
                     <p class="section-description">Please list relevant skills or experience related to the position:</p>
@@ -430,7 +459,6 @@
                     </div>
                 </div>
 
-                <!-- SOCIAL MEDIA -->
                 <div class="section">
                     <div class="section-title">Social Media Presence</div>
                     <p class="section-description">Links to Social Media Profiles (if applicable):</p>
@@ -446,7 +474,6 @@
                     </div>
                 </div>
 
-                <!-- REFERENCES -->
                 <div class="section">
                     <div class="section-title">Professional References</div>
                     <p class="section-description">Please provide two professional references:</p>
@@ -488,21 +515,18 @@
                     </div>
                 </div>
 
-                <!-- APPLICANT STATEMENT -->
                 <div class="section">
                     <div class="section-title">Applicant Declaration</div>
                     <p class="section-description">I certify that the information provided above is true and complete to the best of my knowledge. I understand that any misrepresentation or omission of facts may result in my dismissal from employment or disqualification from further consideration.</p>
                 </div>
 
-                <!-- BUTTONS -->
                 <div class="button-group">
                     <button type="reset" class="btn-clear">Clear Form</button>
-                    <button type="submit" class="btn-submit">Submit Application</button>
+                    <button type="submit" class="btn-submit" id="submitBtn">Submit Application</button>
                 </div>
             </form>
         </div>
 
-        <!-- FOOTER -->
         <div class="footer">
             Thank you for your interest in joining the LA HERRADURA team! We appreciate your application and will review it carefully.
             <br><br>
@@ -511,10 +535,16 @@
     </div>
 
     <script>
+        emailjs.init({
+            publicKey: 'zzDI_0KFPDjkYqBWs'
+        });
+
         const form = document.getElementById('applicationForm');
         const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const submitBtn = document.getElementById('submitBtn');
 
-        // Auto-fill from localStorage (persistent data)
         window.addEventListener('load', () => {
             const savedData = localStorage.getItem('herradura-application');
             if (savedData) {
@@ -532,7 +562,6 @@
             }
         });
 
-        // Auto-save to localStorage every time user types
         form.addEventListener('input', () => {
             const formData = new FormData(form);
             const data = {};
@@ -546,7 +575,6 @@
                 }
             });
 
-            // Also include checkboxes that might not be in FormData if unchecked
             document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 data[checkbox.id] = checkbox.checked;
             });
@@ -554,43 +582,119 @@
             localStorage.setItem('herradura-application', JSON.stringify(data));
         });
 
-        // Handle form submission
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Collect form data
+            loadingMessage.classList.add('show');
+            successMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+            submitBtn.disabled = true;
+
             const formData = new FormData(form);
             const data = {};
             
             formData.forEach((value, key) => {
-                if (data[key]) {
-                    if (!Array.isArray(data[key])) {
-                        data[key] = [data[key]];
-                    }
-                    data[key].push(value);
+                const field = document.getElementById(key);
+                if (field && field.type === 'checkbox') {
+                    data[key] = field.checked ? '✓ Yes' : '☐ No';
                 } else {
-                    data[key] = value;
+                    data[key] = value || '(Not provided)';
                 }
             });
 
-            // Log data to console (in real app, would send to server)
-            console.log('Application Data:', data);
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                if (!data[checkbox.id]) {
+                    data[checkbox.id] = checkbox.checked ? '✓ Yes' : '☐ No';
+                }
+            });
 
-            // Show success message
-            successMessage.classList.add('show');
-            setTimeout(() => {
-                successMessage.classList.remove('show');
-            }, 3000);
+            const emailContent = `
+NEW EMPLOYMENT APPLICATION - LA HERRADURA
 
-            // Optionally send to server
-            // fetch('/submit-application', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
+====== PERSONAL INFORMATION ======
+Full Name: ${data.fullName}
+Email: ${data.email}
+Phone: ${data.phone}
+City, State, Zip: ${data.city}
+Position Applied For: ${data.position}
+Start Date: ${data.startDate}
+
+====== AVAILABILITY ======
+Days Available: ${data.daysAvailable}
+Hours Available: ${data.hoursAvailable}
+
+====== REQUIREMENTS ======
+Bilingual (English/Spanish): ${data.bilingual}
+Restaurant Experience: ${data.experience}
+Active on Social Media: ${data.socialMedia}
+Food Handler Permit: ${data.foodHandler}
+Alcohol Server Permit: ${data.alcoholServer}
+
+====== EMPLOYMENT HISTORY ======
+Previous Employer: ${data.employer}
+Position: ${data.previousPosition}
+Start Date: ${data.startEmployment}
+End Date: ${data.endEmployment}
+Responsibilities: ${data.responsibilities}
+Reason for Leaving: ${data.reasonLeaving}
+Desired Pay: ${data.desiredPay}
+
+====== SKILLS & EXPERIENCE ======
+${data.skills}
+
+====== SOCIAL MEDIA PRESENCE ======
+Profile 1: ${data.socialMedia1}
+Profile 2: ${data.socialMedia2}
+
+====== PROFESSIONAL REFERENCES ======
+Reference 1 - Name: ${data.ref1Name}
+Relationship: ${data.ref1Relationship}
+Phone: ${data.ref1Phone}
+
+Reference 2 - Name: ${data.ref2Name}
+Relationship: ${data.ref2Relationship}
+Phone: ${data.ref2Phone}
+
+====== APPLICANT DECLARATION ======
+I certify that the information provided above is true and complete to the best of my knowledge.
+
+Applicant Email: ${data.email}
+Application Submitted: ${new Date().toLocaleString()}
+            `;
+
+            try {
+                await emailjs.send('service_herradura', 'template_herradura', {
+                    to_email: 'LaHerradura.arlington@gmail.com',
+                    applicant_name: data.fullName,
+                    applicant_email: data.email,
+                    applicant_phone: data.phone,
+                    position: data.position,
+                    message: emailContent
+                });
+
+                loadingMessage.classList.remove('show');
+                successMessage.classList.add('show');
+                
+                form.reset();
+                localStorage.removeItem('herradura-application');
+                
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                    submitBtn.disabled = false;
+                }, 5000);
+
+            } catch (error) {
+                console.error('Email error:', error);
+                loadingMessage.classList.remove('show');
+                errorMessage.classList.add('show');
+                submitBtn.disabled = false;
+                
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 5000);
+            }
         });
 
-        // Handle clear button - also clears localStorage
         document.querySelector('.btn-clear').addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all data?')) {
                 localStorage.removeItem('herradura-application');
