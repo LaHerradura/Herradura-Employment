@@ -231,6 +231,7 @@
             border-radius: 4px;
             margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
         }
 
         .success-message.show {
@@ -246,6 +247,7 @@
             border-radius: 4px;
             margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
         }
 
         .error-message.show {
@@ -287,7 +289,7 @@
         <div class="content">
             <div class="loading" id="loadingMessage">⏳ Sending your application...</div>
             <div class="success-message" id="successMessage">✓ Application submitted successfully! We'll be in touch soon.</div>
-            <div class="error-message" id="errorMessage">✗ Error submitting. Please check your connection and try again.</div>
+            <div class="error-message" id="errorMessage">✗ Error submitting. Please try again.</div>
 
             <form id="applicationForm">
                 <div class="section">
@@ -486,9 +488,7 @@
     </div>
 
     <script>
-        (function() {
-            emailjs.init("zzDI_0KFPDjkYqBWs");
-        })();
+        emailjs.init("DwBc1R-hn9G4vikya");
 
         const form = document.getElementById('applicationForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -505,8 +505,8 @@
             errorMsg.classList.remove('show');
 
             const formData = new FormData(form);
-            let emailText = "NEW EMPLOYMENT APPLICATION - LA HERRADURA\n\n";
             
+            let emailText = "NEW EMPLOYMENT APPLICATION - LA HERRADURA\n\n";
             emailText += "====== PERSONAL INFORMATION ======\n";
             emailText += "Full Name: " + (formData.get('fullName') || 'N/A') + "\n";
             emailText += "Email: " + (formData.get('email') || 'N/A') + "\n";
@@ -517,77 +517,4 @@
 
             emailText += "====== AVAILABILITY ======\n";
             emailText += "Days: " + (formData.get('daysAvailable') || 'N/A') + "\n";
-            emailText += "Hours: " + (formData.get('hoursAvailable') || 'N/A') + "\n\n";
-
-            emailText += "====== REQUIREMENTS ======\n";
-            emailText += "Bilingual: " + (document.getElementById('bilingual').checked ? 'YES' : 'NO') + "\n";
-            emailText += "Experience: " + (document.getElementById('experience').checked ? 'YES' : 'NO') + "\n";
-            emailText += "Social Media: " + (document.getElementById('socialMedia').checked ? 'YES' : 'NO') + "\n";
-            emailText += "Food Handler: " + (document.getElementById('foodHandler').checked ? 'YES' : 'NO') + "\n";
-            emailText += "Alcohol Server: " + (document.getElementById('alcoholServer').checked ? 'YES' : 'NO') + "\n\n";
-
-            emailText += "====== EMPLOYMENT HISTORY ======\n";
-            emailText += "Employer: " + (formData.get('employer') || 'N/A') + "\n";
-            emailText += "Position: " + (formData.get('previousPosition') || 'N/A') + "\n";
-            emailText += "Start Date: " + (formData.get('startEmployment') || 'N/A') + "\n";
-            emailText += "End Date: " + (formData.get('endEmployment') || 'N/A') + "\n";
-            emailText += "Responsibilities: " + (formData.get('responsibilities') || 'N/A') + "\n";
-            emailText += "Reason for Leaving: " + (formData.get('reasonLeaving') || 'N/A') + "\n";
-            emailText += "Desired Pay: " + (formData.get('desiredPay') || 'N/A') + "\n\n";
-
-            emailText += "====== SKILLS ======\n";
-            emailText += (formData.get('skills') || 'N/A') + "\n\n";
-
-            emailText += "====== SOCIAL MEDIA ======\n";
-            emailText += "Profile 1: " + (formData.get('socialMedia1') || 'N/A') + "\n";
-            emailText += "Profile 2: " + (formData.get('socialMedia2') || 'N/A') + "\n\n";
-
-            emailText += "====== REFERENCES ======\n";
-            emailText += "Ref 1 Name: " + (formData.get('ref1Name') || 'N/A') + "\n";
-            emailText += "Ref 1 Relationship: " + (formData.get('ref1Relationship') || 'N/A') + "\n";
-            emailText += "Ref 1 Phone: " + (formData.get('ref1Phone') || 'N/A') + "\n";
-            emailText += "Ref 2 Name: " + (formData.get('ref2Name') || 'N/A') + "\n";
-            emailText += "Ref 2 Relationship: " + (formData.get('ref2Relationship') || 'N/A') + "\n";
-            emailText += "Ref 2 Phone: " + (formData.get('ref2Phone') || 'N/A') + "\n\n";
-
-            emailText += "====== SUBMISSION ======\n";
-            emailText += "Submitted: " + new Date().toLocaleString() + "\n";
-            emailText += "From: " + (formData.get('email') || 'N/A');
-
-            try {
-                await emailjs.send('service_herradura', 'template_herradura', {
-                    to_email: 'LaHerradura.arlington@gmail.com',
-                    from_name: formData.get('fullName') || 'Applicant',
-                    message: emailText,
-                    applicant_email: formData.get('email') || 'N/A'
-                });
-
-                loadingMsg.classList.remove('show');
-                successMsg.classList.add('show');
-                form.reset();
-
-                setTimeout(() => {
-                    successMsg.classList.remove('show');
-                    submitBtn.disabled = false;
-                }, 4000);
-
-            } catch (error) {
-                console.error('Error:', error);
-                loadingMsg.classList.remove('show');
-                errorMsg.classList.add('show');
-                submitBtn.disabled = false;
-
-                setTimeout(() => {
-                    errorMsg.classList.remove('show');
-                }, 4000);
-            }
-        });
-
-        document.querySelector('.btn-clear').addEventListener('click', function() {
-            if (confirm('Clear all form data?')) {
-                localStorage.removeItem('herradura-form');
-            }
-        });
-    </script>
-</body>
-</html>
+            emailText += "Hours:​​​​​​​​​​​​​​​​
